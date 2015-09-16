@@ -1,0 +1,35 @@
+<div class="hero-unit" ng-controller="NewEventCtrl">
+	<form name="newEventForm" novalidate>
+		<fieldset>
+			
+			<legend>Create new event</legend>
+
+			<div class="control-group">
+				<input type="text" ng-model="event.type" placeholder="Activity type" required>
+				<input type="text" ng-model="event.location" placeholder="Location...">
+				<input type="text" ng-model="event.date" placeholder="The day" bs-datepicker />
+				<input type="text" ng-model="event.time" placeholder="The time" bs-timepicker />
+
+				<input type="text" ng-model="event.newPerson" placeholder="Add person...">
+				<input type="button" ng-click="addPerson()" value="add">
+				<ul>
+					<li ng-repeat="person in people">{{person}}</li>
+				</ul>
+
+				<input type="text" ng-model="event.newActivity" placeholder="Activity...">
+				<input type="button" ng-click="addActivity()" value="add">
+				<ul>
+					<li ng-repeat="activity in activities">{{activity}}</li>
+				</ul>
+			</div>
+
+			<div class="control-group">
+				<input type="submit" value="New" class="btn" 
+					ng-click="createEvent(event)"
+					ng-disabled="newEventForm.$invalid" >
+			</div>
+
+		</fieldset>
+	</form>
+</div>
+

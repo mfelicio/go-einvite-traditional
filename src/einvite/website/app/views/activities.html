@@ -1,0 +1,8 @@
+<div ng-controller="ActivitiesCtrl">
+	Activities sugested for the event
+	<ul>
+		<li ng-repeat="activity in activities | orderBy:activity.rating | limitTo:5">
+			<a href="">{{activity.name}}</a>
+		</li>
+	</ul>
+</div>

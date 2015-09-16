@@ -1,0 +1,56 @@
+{
+	"http": {
+		"port": "8080",
+		"ssl": false,
+		"staticpath": "./website-demos"
+	},
+	"websocket": {
+		"port": "8088",
+		"ssl": false
+	},
+	"security": {
+		"signKey": "signKeyW/16Chars",
+		"encryptionKey": "ciphKeyW/16Chars"
+	},
+	"session": {
+		"cookie": "EIID",
+		"httpOnly": true,
+		"secure": false,
+		"ttl": 3600,
+		"autoRefresh": true 
+	},
+	"mongo": {
+		"host": "%MONGO_HOST%",
+		"port": "%MONGO_PORT%",
+		"database": "%MONGO_DB%",
+		"user": "%MONGO_USER%",
+		"password": "%MONGO_PWD%"
+	},
+	"redis": {
+		"host": "%REDIS_HOST%",
+		"port": "%REDIS_PORT%",
+		"password": "%REDIS_PWD%"
+	},
+	"google": {
+		"clientId": "%GOOGLE_CLIENT_ID%",
+		"clientSecret": "%GOOGLE_CLIENT_SECRET%",
+		"authURL": "https://accounts.google.com/o/oauth2/auth",
+		"tokenURL": "https://accounts.google.com/o/oauth2/token",
+		"redirectURL": "http://localhost:8080/auth/google/callback",
+		"scope": "https://www.googleapis.com/auth/userinfo.profile https://www.googleapis.com/auth/userinfo.email",
+		"approvalPrompt": "auto",
+		"accessType": "offline",
+		"profileInfoURL": "https://www.googleapis.com/oauth2/v1/userinfo?alt=json"
+	},
+	"facebook": {
+		"clientId": "%FACEBOOK_CLIENT_ID%",
+		"clientSecret": "%FACEBOOK_CLIENT_SECRET%",
+		"authURL": "https://www.facebook.com/dialog/oauth",
+		"tokenURL": "https://graph.facebook.com/oauth/access_token",
+		"redirectURL": "http://localhost:8080/auth/facebook/callback",
+		"scope": "email",
+		"approvalPrompt": "auto",
+		"accessType": "offline",
+		"profileInfoURL": "https://graph.facebook.com/me"
+	}
+}

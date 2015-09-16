@@ -1,0 +1,4 @@
+Explicitly closing connections (reason CONNECTION_CLOSEDBYSERVER) fires onClosed event twice : one for closed by server and another for closed by client because connectionManager is blocked on receive, returns with error and fires the event
+
+missing session.Expire, helpers.ErrorResult
+rename WebResponse to WebResult and GetResponse for GetResult, etc

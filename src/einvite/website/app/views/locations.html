@@ -1,0 +1,8 @@
+<div ng-controller="LocationsCtrl">
+	Locations sugested for the event
+	<ul>
+		<li ng-repeat="location in locations | orderBy:location.rating | limitTo:5">
+			<a href="">{{location.name}}</a>
+		</li>
+	</ul>
+</div>

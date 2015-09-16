@@ -1,0 +1,65 @@
+<html>
+	<head>
+	
+	<script type="text/javascript" src="/static/client.js"></script>
+	<script type="text/javascript" src="/static/sockjs-0.3.4.min.js"></script>
+	<script type="text/javascript">
+
+		var server = window.location.protocol + '//' + window.location.host + '/ws'
+
+		var sock = new SockJS(server);
+		sock.onopen = function() {
+		   	console.log('open');
+		   	window.setInterval(function() {
+				// sock.send('hello world!');
+		   	}, 2000);
+		};
+		sock.onmessage = function(e) {
+		   console.log('message', e.data);
+
+		   var placeholder = document.getElementById("spanReceivedData");
+		   placeholder.innerText = e.data;
+
+		};
+		sock.onclose = function() {
+		   console.log('close');
+		};
+
+		window.sendMessage = function(){
+
+			var text = document.getElementById("txtSend").value;
+			sock.send(text);
+		}
+
+	</script>
+
+	</head>
+	
+	<body>
+	
+		<h1>Go-home tests </h1>
+
+		<div>
+			<input type="text" id="txtSend" />
+			<input type="button" id="btnSend" value="Send" onclick="sendMessage()" />
+		</div>
+		<br/>
+
+		<div>
+			<ul>
+				<li>typing "please kill me" server closes the client with reason "you asked for it" (check websocket frames)</li>
+				<li>typing "please fill me" tells the server to send 1000 messages synchronously</li>
+				<li>typing "please fill me async" tells the server to send 1000 messages in go-routines</li>
+				<li>typing "2:1:msg" sends msg to connection with id 1 on server 2</li>
+				<li>typing "1:1:msg" sends msg to connection with id 1 on server 1</li>
+			</ul>
+		</div>
+
+		<div>
+
+			<h2>last received message: </h2>
+			<span id="spanReceivedData"></span>
+		</div>
+
+	</body>
+</html>

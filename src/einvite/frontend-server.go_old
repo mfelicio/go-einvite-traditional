@@ -1,0 +1,135 @@
+package main
+
+import (
+	common "einvite/common"
+	frontend "einvite/frontend"
+	"fmt"
+	sockjs "github.com/fzzy/sockjs-go/sockjs"
+	"log"
+	"net/http"
+	"os"
+	"strconv"
+	"strings"
+)
+
+var manager frontend.ConnectionManager = frontend.NewConnectionManager()
+var backendClient frontend.BackendClient
+
+func main2() {
+
+	basePortAddress := 8080
+
+	serverNumber := 1
+
+	if len(os.Args) == 2 {
+		serverNumber, _ = strconv.Atoi(os.Args[1])
+	}
+
+	backendClient = frontend.NewBackendClient(common.BACKEND_ADDR, strconv.Itoa(serverNumber))
+
+	backendClient.Start(onRoutedMessage)
+
+	port := strconv.Itoa(basePortAddress + serverNumber)
+
+	server := sockjs.NewServeMux(http.DefaultServeMux)
+	conf := sockjs.NewConfig()
+
+	// http.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir("./frontend/static"))))
+	http.Handle("/static/", http.FileServer(http.Dir("./frontend")))
+	http.HandleFunc("/", indexHandler)
+
+	server.Handle("/ws", onConnection, conf)
+
+	fmt.Println("Starting server", serverNumber, "on port", port)
+
+	err := http.ListenAndServe(":"+port, server)
+	if err != nil {
+		log.Fatal(err)
+	}
+}
+
+func onRoutedMessage(message []byte) {
+
+	//assumes format is id:msg
+	data := string(message)
+
+	if separatorIdx := strings.Index(data, ":"); len(data) >= 3 && separatorIdx > 0 {
+
+		id, _ := strconv.ParseInt(data[:separatorIdx], 10, 64)
+		msg := data[(separatorIdx + 1):]
+
+		if conn, ok := manager.GetConnection(id); ok {
+
+			conn.Write(msg)
+		}
+	}
+}
+
+//default handler returns index.html
+func indexHandler(w http.ResponseWriter, r *http.Request) {
+
+	http.ServeFile(w, r, "./frontend/static/index.html")
+}
+
+func onConnection(session sockjs.Session) {
+
+	log.Println("New connection. ConnectionManager has", manager.TotalConnections(), "connections")
+
+	conn := manager.NewConnection(session)
+
+	conn.OnMessage(func(msg frontend.Message) {
+
+		data := msg.Data()
+
+		if data == "please kill me" {
+
+			conn.Close("you asked for it")
+		} else if data == "please fill me" {
+			for i := 1; i <= 1000; i++ {
+
+				conn.Write(fmt.Sprint("Message ", i, "from server"))
+			}
+		} else if data == "please fill me async" {
+			for i := 1; i <= 1000; i++ {
+
+				go conn.Write(fmt.Sprint("Message ", i, "from server"))
+			}
+		} else {
+
+			//route to another server or echo back to the client
+			if separatorIdx := strings.Index(data, ":"); len(data) >= 3 && separatorIdx > 0 {
+
+				destination := data[:separatorIdx]
+				msg := data[(separatorIdx + 1):]
+
+				backendClient.RouteMessage(destination, []byte(msg))
+
+			} else {
+				echoMsg := fmt.Sprint("Received ", msg.Data(), " at ", msg.Time())
+
+				conn.Write(echoMsg)
+			}
+
+		}
+
+	})
+
+	conn.OnClosed(func(reasonCode int) {
+
+		var reason string
+		switch reasonCode {
+		case 1:
+			reason = "closed by client"
+		case 2:
+			reason = "closed by server"
+		case 3:
+			reason = "closed by timeout"
+		}
+
+		log.Println("Connection", conn.Id(), "closed. Reason:", reason)
+	})
+
+	//blocking
+	manager.Handle(conn)
+
+}

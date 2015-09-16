@@ -1,0 +1,76 @@
+box: wercker/golang@1.1.2
+services:
+  - wercker/redis@0.0.8
+  - wercker/mongodb@1.0.1
+# Build definition
+build:
+  # The steps that will be executed on build
+  steps:
+    # Sets the go workspace and places you package
+    # at the right place in the workspace tree
+    - setup-go-workspace
+
+    - script:
+        name: setup-variables
+        code: |
+          export GOPATH=$WERCKER_SOURCE_DIR
+
+    # Gets the dependencies
+    - script:
+        name: go get
+        code: |
+          go version
+          go get labix.org/v2/mgo
+          go get code.google.com/p/goauth2/oauth
+          go get github.com/hoisie/web
+          go get github.com/fzzy/sockjs-go/sockjs
+          go get -u gopkg.in/check.v1
+
+    # Build the project
+    - script:
+        name: go build
+        code: |
+          #go install labix.org/v2/mgo
+          #go install code.google.com/p/goauth2/oauth
+          #go install github.com/hoisie/web
+          #go install github.com/fzzy/sockjs-go/sockjs
+          go build ./src/einvite
+          
+    # Test the project
+    - script:
+        name: go test
+        code: |
+          go test ./src/einvite/...
+
+    # Copy project binaries to output folder
+    - script:
+        name: copy-to-output
+        code: |
+          rsync -avz "$WERCKER_SOURCE_DIR/einvite" "$WERCKER_OUTPUT_DIR"
+          rsync -avz "$WERCKER_SOURCE_DIR/src/einvite/config.staging.json" "$WERCKER_OUTPUT_DIR"
+# Deploy definition
+deploy:
+  steps:
+    - add-to-known_hosts:
+        hostname: $SERVER_HOSTNAME
+    - mktemp:
+        envvar: PRIVATEKEY_PATH
+    - create-file:
+        name: write key
+        filename: $PRIVATEKEY_PATH
+        content: $SERVER_SSH_PRIVATE
+        overwrite: true
+        hide-from-log: true
+    - script:
+        name: stop application
+        code: ssh -i $PRIVATEKEY_PATH -o StrictHostKeyChecking=no -o UserKnownHostsFile=no $SERVER_USR@$SERVER_HOSTNAME sudo stop einvite
+    - script:
+        name: transfer application
+        code: |
+          pwd
+          ls -la
+          scp -i $PRIVATEKEY_PATH -o StrictHostKeyChecking=no -o UserKnownHostsFile=no einvite $SERVER_USR@$SERVER_HOSTNAME:einvite-app/einvite
+          scp -i $PRIVATEKEY_PATH -o StrictHostKeyChecking=no -o UserKnownHostsFile=no config.staging.json $SERVER_USR@$SERVER_HOSTNAME:einvite-app/config.json
+    - script:
+        name: start application
+        code: ssh -i $PRIVATEKEY_PATH -o StrictHostKeyChecking=no -o UserKnownHostsFile=no $SERVER_USR@$SERVER_HOSTNAME sudo start einvite

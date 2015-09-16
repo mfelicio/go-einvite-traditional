@@ -1,0 +1,17 @@
+#mac os files
+.DS_Store
+
+#Folders
+pkg
+bin
+
+#Files
+src/einvite/einvite
+*.exe
+
+#Libs
+labix.org
+github.com
+code.google.com
+gopkg.in
+
